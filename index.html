@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>내 마음 들여다 보기</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #6c5ce7, #fd79a8);
+      background-size: 400% 400%;
+      animation: gradientShift 10s ease infinite;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .header {
+      color: #fff;
+      text-align: center;
+      padding: 28px 18px 24px;
+      background: linear-gradient(60deg, rgba(255, 107, 107, 0.95), rgba(78, 205, 196, 0.95), rgba(69,183,209,0.95));
+      background-size: 200% 200%;
+      animation: headerGradient 6s ease-in-out infinite;
+    }
+    @keyframes headerGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+    .header p { margin: 0; opacity: .95; }
+    .content { padding: 28px 22px; }
+    .question-group { margin-bottom: 28px; }
+    .question {
+      font-weight: 700; color:#333; margin-bottom: 12px;
+      display: flex; gap: 8px; align-items: center;
+    }
+    .question .q-emoji { font-size: 22px; }
+    .scale-container { display:flex; gap:10px; flex-wrap:wrap; }
+    .scale-option {
+      flex: 1 1 calc(20% - 8px);
+      min-width: 96px;
+      border-radius: 14px;
+      border: 2px solid #e9eef4;
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s, border-color .2s, background .2s;
+      user-select: none;
+    }
+    .scale-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,.08);
+      border-color: #c6d9ff;
+      background: #f6fbff;
+    }
+    .scale-option input { display:none; }
+    .scale-option.selected {
+      border-color: #7c4dff;
+      background: linear-gradient(135deg,#7c4dff14,#00d3a814);
+      box-shadow: 0 12px 18px rgba(124,77,255,.18);
+      transform: translateY(-1px) scale(1.02);
+    }
+    .emoji { font-size: 28px; margin-bottom: 6px; }
+    .scale-text { font-size: 12px; font-weight: 700; line-height: 1.2; color:#333; }
+
+    .complete-btn, .submit-btn, .reset-btn, .save-btn {
+      width: 100%;
+      border: 0; cursor:pointer; color: #fff; font-weight: 800;
+      border-radius: 14px; padding: 14px 16px; font-size: 18px;
+      transition: transform .15s, box-shadow .2s, opacity .2s;
+      background: linear-gradient(45deg,#7c4dff,#4ecdc4);
+      box-shadow: 0 14px 28px rgba(124,77,255,.25);
+      margin-top: 16px;
+    }
+    .complete-btn:disabled { opacity: .6; cursor:not-allowed; box-shadow:none; }
+    .complete-btn:hover:not(:disabled), .submit-btn:hover, .reset-btn:hover, .save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 32px rgba(124,77,255,.28);
+    }
+    .result {
+      display:none;
+      margin-top: 10px;
+      border-radius: 18px;
+      padding: 24px;
+      color: #fff;
+      background: linear-gradient(120deg,#5f7cff,#7e57c2);
+    }
+    .result.show { display:block; animation: fadeIn .45s ease; }
+    @keyframes fadeIn { from {opacity:0; transform: translateY(8px);} to {opacity:1; transform:none;} }
+    .result-emoji { font-size: 72px; margin-bottom: 10px; }
+    .result-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+    .result-desc { font-size: 15px; opacity: .95; line-height: 1.6; }
+    .quote-box {
+      margin-top: 16px;
+      background: rgba(255,255,255,.14);
+      border: 1px dashed rgba(255,255,255,.5);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .quote-text { font-size: 16px; font-weight: 700; }
+    .quote-author { font-size: 13px; opacity: .9; margin-top: 4px; }
+
+    .divider { height: 1px; background: #eef2f7; margin: 20px 0; }
+    .footer { text-align:center; padding: 18px; color:#666; font-size: 12px; }
+
+    .contact-box {
+      margin-top: 16px;
+      background: #f8f9ff;
+      border: 1px solid #e6e9fb;
+      border-radius: 14px;
+      padding: 16px;
+      color: #374151;
+    }
+    .contact-box h3 { margin:0 0 10px; font-size: 16px; }
+    .field-row { display:flex; gap: 10px; flex-wrap: wrap; }
+    .field { flex:1 1 220px; min-width: 220px; display:flex; flex-direction:column; gap:6px; }
+    .field label { font-weight: 700; font-size: 13px; color:#374151; }
+    .field input, .field textarea {
+      border: 2px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; font-size: 14px;
+      outline: none; transition: border-color .2s, box-shadow .2s; background: #fff;
+    }
+    .field input:focus, .field textarea:focus {
+      border-color: #7c4dff; box-shadow: 0 0 0 4px rgba(124,77,255,.12);
+    }
+    .submit-row { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .submit-btn { flex: 1 1 260px; background: linear-gradient(45deg,#7c4dff,#00bcd4); }
+    .reset-btn { flex: 1 1 180px; background: #6b7280; box-shadow: none; }
+    .save-btn { flex: 1 1 180px; background: linear-gradient(45deg,#22c55e,#3b82f6); }
+
+    .pill {
+      display:inline-block; padding: 6px 10px; border-radius: 999px;
+      background: rgba(255,255,255,.2); font-weight:700; font-size: 12px; margin-left: 6px;
+    }
+
+    /* === Overrides for layout & footer === */
+    .scale-container {
+      display: grid !important;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .scale-option { flex: initial !important; min-width: auto !important; }
+    @media (max-width: 480px) {
+      .scale-container { grid-template-columns: repeat(3, 1fr); }
+    }
+    /* footer one-step larger */
+    .footer { font-size: 14px !important; }
+    /* helper hint under the complete button */
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    .cta-wrap {
+      margin-top: 16px;
+    }
+    .cta-button {
+      width: 100%;
+      border: 0; 
+      cursor: pointer; 
+      color: #fff; 
+      font-weight: 800;
+      border-radius: 14px; 
+      padding: 14px 16px; 
+      font-size: 16px;
+      transition: transform .15s, box-shadow .2s;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      box-shadow: 0 14px 28px rgba(255,107,107,.25);
+      margin-bottom: 8px;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 32px rgba(255,107,107,.35);
+    }
+
+    .result-text {
+      font-size: 22px; 
+      font-weight: 900; 
+      margin-bottom: 8px;
+    }
+    .result-description {
+      font-size: 15px; 
+      opacity: .95; 
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .quote {
+      margin-top: 16px;
+      background: rgba(255,255,255,.14);
+      border: 1px dashed rgba(255,255,255,.5);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px; 
+      font-weight: 700;
+    }
+    .who {
+      font-size: 13px; 
+      opacity: .9; 
+      margin-left: 8px;
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌈 내 마음 들여다보기</h1>
+      <p>오늘 나의 감정은 어떤가요? <span class="pill">부담 없이 체크</span></p>
+    </div>
+
+    <div class="content">
+      <form id="emotionForm">
+        <!-- 7문항 -->
+        <div class="question-group">
+          <div class="question"><span class="q-emoji">🌈</span>오늘 얼마나 행복했나요?</div>
+          <div class="scale-container" data-name="happiness">
+            <label class="scale-option" data-value="1"><input type="radio" name="happiness" value="1"><span class="emoji">😭</span><div class="scale-text">완전<br>슬퍼요</div></label>
+            <label class="scale-option" data-value="2"><input type="radio" name="happiness" value="2"><span class="emoji">🥺</span><div class="scale-text">조금<br>슬퍼요</div></label>
+            <label class="scale-option" data-value="3"><input type="radio" name="happiness" value="3"><span class="emoji">😶</span><div class="scale-text">그냥<br>그래요</div></label>
+            <label class="scale-option" data-value="4"><input type="radio" name="happiness" value="4"><span class="emoji">😄</span><div class="scale-text">기분<br>좋아요</div></label>
+            <label class="scale-option" data-value="5"><input type="radio" name="happiness" value="5"><span class="emoji">🥳</span><div class="scale-text">완전<br>최고!</div></label>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question"><span class="q-emoji">🌪️</span>오늘 얼마나 불안했나요?</div>
+          <div class="scale-container" data-name="anxiety">
+            <label class="scale-option" data-value="1"><input type="radio" name="anxiety" value="1"><span class="emoji">🧘‍♂️</span><div class="scale-text">완전<br>평온해요</div></label>
+            <label class="scale-option" data-value="2"><input type="radio" name="anxiety" value="2"><span class="emoji">😎</span><div class="scale-text">여유<br>있어요</div></label>
+            <label class="scale-option" data-value="3"><input type="radio" name="anxiety" value="3"><span class="emoji">🤔</span><div class="scale-text">그냥<br>그래요</div></label>
+            <label class="scale-option" data-value="4"><input type="radio" name="anxiety" value="4"><span class="emoji">😬</span><div class="scale-text">조금<br>걱정돼요</div></label>
+            <label class="scale-option" data-value="5"><input type="radio" name="anxiety" value="5"><span class="emoji">🫨</span><div class="scale-text">완전<br>불안해요</div></label>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question"><span class="q-emoji">🌋</span>오늘 얼마나 화가 났나요?</div>
+          <div class="scale-container" data-name="anger">
+            <label class="scale-option" data-value="1"><input type="radio" name="anger" value="1"><span class="emoji">🕊️</span><div class="scale-text">완전<br>평화로워요</div></label>
+            <label class="scale-option" data-value="2"><input type="radio" name="anger" value="2"><span class="emoji">😊</span><div class="scale-text">기분<br>좋아요</div></label>
+            <label class="scale-option" data-value="3"><input type="radio" name="anger" value="3"><span class="emoji">😑</span><div class="scale-text">그냥<br>그래요</div></label>
+            <label class="scale-option" data-value="4"><input type="radio" name="anger" value="4"><span class="emoji">😤</span><div class="scale-text">좀<br>짜증나요</div></label>
+            <label class="scale-option" data-value="5"><input type="radio" name="anger" value="5"><span class="emoji">🤬</span><div class="scale-text">완전<br>화나요!</div></label>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question"><span class="q-emoji">🔋</span>오늘 얼마나 피곤했나요?</div>
+          <div class="scale-container" data-name="tiredness">
+            <label class="scale-option" data-value="1"><input type="radio" name="tiredness" value="1"><span class="emoji">🚀</span><div class="scale-text">에너지<br>풀!</div></label>
+            <label class="scale-option" data-value="2"><input type="radio" name="tiredness" value="2"><span class="emoji">💪</span><div class="scale-text">힘이<br>넘쳐요</div></label>
+            <label class="scale-option" data-value="3"><input type="radio" name="tiredness" value="3"><span class="emoji">😐</span><div class="scale-text">적당<br>해요</div></label>
+            <label class="scale-option" data-value="4"><input type="radio" name="tiredness" value="4"><span class="emoji">🥱</span><div class="scale-text">좀<br>피곤해요</div></label>
+            <label class="scale-option" data-value="5"><input type="radio" name="tiredness" value="5"><span class="emoji">😵</span><div class="scale-text">완전<br>지쳤어요</div></label>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question"><span class="q-emoji">⭐</span>오늘 얼마나 자신감이 있었나요?</div>
+          <div class="scale-container" data-name="confidence">
+            <label class="scale-option" data-value="1"><input type="radio" name="confidence" value="1"><span class="emoji">🐌</span><div class="scale-text">완전<br>자신없어요</div></label>
+            <label class="scale-option" data-value="2"><input type="radio" name="confidence" value="2"><span class="emoji">😟</span><div class="scale-text">조금<br>불안해요</div></label>
+            <label class="scale-option" data-value="3"><input type="radio" name="confidence" value="3"><span class="emoji">🤷‍♂️</span><div class="scale-text">그냥<br>그래요</div></label>
+            <label class="scale-option" data-value="4"><input type="radio" name="confidence" value="4"><span class="emoji">😤</span><div class="scale-text">자신<br>있어요</div></label>
+            <label class="scale-option" data-value="5"><input type="radio" name="confidence" value="5"><span class="emoji">🦸‍♀️</span><div class="scale-text">슈퍼<br>히어로!</div></label>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question"><span class="q-emoji">🎢</span>오늘 얼마나 스트레스를 받았나요?</div>
+          <div class="scale-container" data-name="stress">
+            <label class="scale-option" data-value="1"><input type="radio" name="stress" value="1"><span class="emoji">🏖️</span><div class="scale-text">완전<br>편안해요</div></label>
+            <label class="scale-option" data-value="2"><input type="radio" name="stress" value="2"><span class="emoji">😌</span><div class="scale-text">차분<br>해요</div></label>
+            <label class="scale-option" data-value="3"><input type="radio" name="stress" value="3"><span class="emoji">😐</span><div class="scale-text">보통<br>이에요</div></label>
+            <label class="scale-option" data-value="4"><input type="radio" name="stress" value="4"><span class="emoji">😵‍💫</span><div class="scale-text">좀<br>답답해요</div></label>
+            <label class="scale-option" data-value="5"><input type="radio" name="stress" value="5"><span class="emoji">🤯</span><div class="scale-text">머리가<br>터질 듯!</div></label>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question"><span class="q-emoji">🎭</span>오늘 친구들과의 관계는 어땠나요?</div>
+          <div class="scale-container" data-name="friendship">
+            <label class="scale-option" data-value="1"><input type="radio" name="friendship" value="1"><span class="emoji">💔</span><div class="scale-text">완전<br>최악</div></label>
+            <label class="scale-option" data-value="2"><input type="radio" name="friendship" value="2"><span class="emoji">😒</span><div class="scale-text">좀<br>별로</div></label>
+            <label class="scale-option" data-value="3"><input type="radio" name="friendship" value="3"><span class="emoji">😐</span><div class="scale-text">그냥<br>그래요</div></label>
+            <label class="scale-option" data-value="4"><input type="radio" name="friendship" value="4"><span class="emoji">😊</span><div class="scale-text">좋은<br>편</div></label>
+            <label class="scale-option" data-value="5"><input type="radio" name="friendship" value="5"><span class="emoji">🎉</span><div class="scale-text">완전<br>짱친</div></label>
+          </div>
+        </div>
+
+        <button type="submit" class="complete-btn" id="completeBtn" disabled>✨ 내 감정 알아보기 ✨</button>
+      
+        <div id="completeHint" class="hint">모든 문항을 체크하면 버튼이 활성화됩니다.</div>
+      </form>
+
+      <div class="result" id="result">
+        <div class="result-emoji" id="resultEmoji">🌟</div>
+        <div class="result-text" id="resultText">결과 제목</div>
+        <div class="result-description" id="resultDescription">설명</div>
+        <div class="quote" id="quoteBox"></div>
+        <div class="cta-wrap">
+          <button class="cta-button" id="giftBtn" aria-label="선물추첨을 위한 개인정보 제공">🎁 선물추첨을 위한 개인정보 제공</button>
+          <div class="hint" style="color:#fff;opacity:.95;margin-top:8px;">버튼을 누르면 Google Form으로 이동합니다.</div>
+        </div>
+        <button class="reset-btn" onclick="resetForm()">다시 체크하기</button>
+      </div>
+    </div>
+
+    <div class="footer"><strong>문래동 청소년지도협의회</strong></div>
+  </div>
+
+<script>
+  const GOOGLE_FORM_LINK = "https://forms.gle/jWqt8UNsmgkmV3Bm8";
+  const questionGroups = ['happiness','anxiety','anger','tiredness','confidence','stress','friendship'];
+  const quotes = [
+    {text: "어려움 한가운데에 기회가 있다.", who: "알베르트 아인슈타인"},
+    {text: "천천히 가더라도 멈추지 마라.", who: "공자"},
+    {text: "행복은 이미 당신 안에 있다.", who: "루마니아 속담"},
+    {text: "용기는 두려움이 없는 것이 아니라, 두려움을 이겨내는 것이다.", who: "넬슨 만델라"},
+    {text: "네가 할 수 있다고 믿으면, 이미 반은 이루었다.", who: "시어도어 루스벨트"},
+    {text: "가장 어두운 밤도 끝나고 해는 떠오른다.", who: "빅토르 위고"},
+    {text: "네가 되는 데에 두려워하지 마라. 너는 충분하다.", who: "미셸 오바마"},
+    {text: "실패는 더 똑똑하게 다시 시작할 기회다.", who: "헨리 포드"},
+    {text: "작은 친절이 큰 희망을 만든다.", who: "어머니 테레사"},
+    {text: "아직은 '못 한다'가 아니라 '아직'일 뿐이다.", who: "캐롤 드웩"},
+    {text: "불가능해 보일 때가 가능성의 문 앞이다.", who: "말랄라 유사프자이"},
+    {text: "빛이 보이지 않을 때 스스로 빛이 되어라.", who: "에드가 앨런 포"},
+    {text: "오늘의 투쟁이 내일의 힘을 만든다.", who: "윈스턴 처칠"},
+    {text: "너는 네가 믿는 것보다 더 용감하고, 생각보다 더 강하다.", who: "A. A. 밀른"},
+    {text: "하루하루의 작은 발걸음이 큰 변화를 만든다.", who: "루 피니어"},
+    {text: "기적은 준비된 사람에게 온다.", who: "루이 파스퇴르"},
+    {text: "날개는 넘어지며 단단해진다.", who: "독일 속담"},
+    {text: "네 안에 답이 있다. 조용히 들어라.", who: "루미"},
+    {text: "희망은 깃털 달린 것, 영혼 위에 앉아 노래한다.", who: "에밀리 디킨슨"},
+    {text: "네가 세상에서 보고 싶은 변화가 되어라.", who: "마하트마 간디"},
+    {text: "할 수 있는 일을, 있는 곳에서, 가진 것으로 시작하라.", who: "시어도어 루스벨트"},
+    {text: "실수는 네가 시도했다는 증거다.", who: "제니퍼 리"},
+    {text: "내일을 만드는 것은 오늘의 선택이다.", who: "엘리너 루스벨트"},
+    {text: "비바람은 나무 뿌리를 깊게 한다.", who: "일본 속담"},
+    {text: "너의 빛을 숨기지 마라. 세상은 그 빛을 기다린다.", who: "마야 안젤루"}
+  ];
+  const messages10 = {
+    10: {emoji: "🌞✨", title: "오늘의 주인공은 바로 너!", desc: "스스로를 칭찬해요. 너의 밝음이 주변에도 번지고 있어요. 내일도 이 에너지로 멋지게!"},
+     9: {emoji: "🏆🎉", title: "아주 훌륭해요!", desc: "네가 쌓아 올린 노력과 마음가짐이 반짝여요. 계속 가면 못할 게 없어요."},
+     8: {emoji: "💪🌟", title: "단단하고 멋진 하루!", desc: "스스로를 믿는 용기가 보여요. 작은 도전도 씩씩하게! 오늘의 너, 최고!"},
+     7: {emoji: "😄👍", title: "상당히 좋은 흐름!", desc: "좋았던 순간을 기억하고 스스로를 칭찬해 주세요. 내일은 더 좋아질 거예요."},
+     6: {emoji: "🙂🌈", title: "괜찮은 하루였어요", desc: "작은 성취도 소중해요. 오늘의 나에게 '잘 했어!'라고 말해줘요."},
+     5: {emoji: "😌🍀", title: "숨 고르기 성공!", desc: "조금은 평범해도 좋아요. 좋아하는 음악 한 곡으로 내 마음을 응원해요."},
+     4: {emoji: "🤗🫶", title: "토닥토닥, 괜찮아", desc: "지금의 기분을 인정해 보아요. 너는 충분히 잘하고 있어요. 내일은 더 가벼울 거예요."},
+     3: {emoji: "🌤️🧡", title: "구름 사이로 빛이 보여요", desc: "작은 희망을 붙잡아 보아요. 누군가에게 기댈 용기도 멋진 용기예요."},
+     2: {emoji: "🌧️🤍", title: "마음이 무거웠구나", desc: "그럴 수 있어요. 오늘의 나를 지켜낸 것만으로도 대단해요. 따뜻한 말 한마디를 스스로에게."},
+     1: {emoji: "🌙🕯️", title: "오늘을 잘 버텨냈어요", desc: "너는 혼자가 아니에요. 내일의 작은 빛이 분명히 올 거예요. 도움이 필요하면 꼭 손 내밀어 줘요."}
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    const completeBtn = document.getElementById('completeBtn');
+    const form = document.getElementById('emotionForm');
+    const giftBtn = document.getElementById('giftBtn');
+
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', function () {
+        const groupName = this.name;
+        document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => {
+          r.closest('.scale-option').classList.remove('selected');
+        });
+        this.closest('.scale-option').classList.add('selected');
+        checkCompletion();
+      });
+    });
+
+    function checkCompletion(){
+      let allAnswered = true;
+      for (const g of questionGroups) {
+        if (!document.querySelector(`input[name="${g}"]:checked`)) { allAnswered = false; break; }
+      }
+      completeBtn.disabled = !allAnswered;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      calculateResult();
+    });
+
+    giftBtn.addEventListener('click', function () {
+      window.open(GOOGLE_FORM_LINK, '_blank', 'noopener');
+    });
+  });
+
+  function calculateResult() {
+    let totalScore = 0;
+    const negative = ['anxiety','anger','tiredness','stress'];
+    for (const g of questionGroups) {
+      const checked = document.querySelector(`input[name="${g}"]:checked`);
+      if (!checked) return;
+      const val = parseInt(checked.value, 10);
+      if (negative.includes(g)) totalScore += (6 - val); else totalScore += val;
+    }
+    const average = totalScore / questionGroups.length; // 1~5
+    const scaled = Math.max(1, Math.min(10, Math.round(((average - 1) / 4) * 9 + 1)));
+    showResult(scaled);
+  }
+
+  function showResult(scaledScore) {
+    const resultDiv = document.getElementById('result');
+    const resultEmoji = document.getElementById('resultEmoji');
+    const resultText = document.getElementById('resultText');
+    const resultDescription = document.getElementById('resultDescription');
+    const form = document.getElementById('emotionForm');
+    const quoteBox = document.getElementById('quoteBox');
+
+    const msg = messages10[scaledScore] || messages10[5];
+    resultEmoji.textContent = msg.emoji;
+    resultText.textContent = msg.title;
+    resultDescription.textContent = msg.desc;
+
+    const q = quotes[Math.floor(Math.random() * quotes.length)];
+    quoteBox.innerHTML = `"${q.text}"<span class="who">— ${q.who}</span>`;
+
+    form.style.display = 'none';
+    resultDiv.classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    const form = document.getElementById('emotionForm');
+    const resultDiv = document.getElementById('result');
+    const completeBtn = document.getElementById('completeBtn');
+
+    form.reset();
+    document.querySelectorAll('.scale-option.selected').forEach(option => option.classList.remove('selected'));
+    completeBtn.disabled = true;
+    resultDiv.classList.remove('show');
+    form.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  window.resetForm = resetForm;
+</script>
+</body>
+</html>
